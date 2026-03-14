@@ -190,7 +190,7 @@ function startSession(){
 
 function restartQuiz(wrongOnly){
   if(wrongOnly&&wrongIds.length>0){sessionQuestions=shuffle(allQuestions.filter(q=>wrongIds.includes(q.question_id)));}
-  else{const pool=activeFilter==='all'?allQuestions:allQuestions.filter(q=>q.type===activeFilter);sessionQuestions=shuffle(pool);}
+  else{const pool=activeFilter==='all'?allQuestions:activeFilter==='SCENARIO'?allQuestions.filter(q=>q.tag==='SCENARIO'):allQuestions.filter(q=>q.type===activeFilter&&q.tag!=='SCENARIO');sessionQuestions=shuffle(pool);}
   currentIndex=0;score=0;answered=0;wrongIds=[];updateBadge();
   document.getElementById('results-screen').style.display='none';
   document.getElementById('quiz-screen').style.display='block';
@@ -201,6 +201,7 @@ function updateBadge(){document.getElementById('score-badge').innerHTML=`<b>${sc
 function updateProgress(){const p=sessionQuestions.length?(currentIndex/sessionQuestions.length)*100:0;document.getElementById('progress-fill').style.width=p+'%';}
 
 function render(){
+  if(!sessionQuestions.length){document.getElementById('question-area').innerHTML=`<div class="card"><div class="card-body"><div class="question-text" style="color:var(--text-dim)">No questions match this filter.</div></div></div>`;updateProgress();return;}
   if(currentIndex>=sessionQuestions.length){showResults();return;}
   updateProgress(); selectedOptions=new Set();
   const q=sessionQuestions[currentIndex];
