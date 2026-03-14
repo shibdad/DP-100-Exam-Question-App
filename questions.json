@@ -6642,5 +6642,315 @@
       }
     ],
     "feedback": "BanditPolicy is the most common early termination policy for sweep jobs. It stops trials that fall outside a slack_factor relative to the best run, saving compute costs during hyperparameter tuning."
+  },
+  {
+    "question_id": "scen_001",
+    "type": "multiple_choice_single_answer",
+    "tag": "SCENARIO",
+    "question": "You are a data scientist at a healthcare company. You have trained an XGBoost model locally and registered it in Azure Machine Learning. You need to deploy it as a real-time endpoint that can handle bursts of up to 500 requests per second, requires sub-100ms latency, and must scale to zero when idle to minimize cost.\n\nWhich deployment configuration should you use?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Azure Container Instance (ACI) with a single-instance managed online endpoint",
+        "is_correct": false
+      },
+      {
+        "id": "B",
+        "text": "Managed online endpoint with deployment autoscaling configured via az ml online-deployment update, setting min_instances=0 and scale_type=TargetUtilizationScaling",
+        "is_correct": true
+      },
+      {
+        "id": "C",
+        "text": "Batch endpoint with a compute cluster of min_instances=0 and max_instances=10",
+        "is_correct": false
+      },
+      {
+        "id": "D",
+        "text": "Kubernetes online endpoint on AKS with manual scaling rules defined in the deployment YAML",
+        "is_correct": false
+      }
+    ],
+    "correct_order": null,
+    "feedback": "Managed online endpoints support autoscaling to zero with TargetUtilizationScaling, meeting latency and scale-to-zero requirements. ACI doesn't autoscale. Batch endpoints are not for real-time sub-100ms latency. AKS requires manual scaling management and doesn't scale to zero natively without additional configuration.",
+    "explanation": null
+  },
+  {
+    "question_id": "scen_002",
+    "type": "multiple_choice_multiple_answer",
+    "tag": "SCENARIO",
+    "question": "You have a training pipeline built with Azure ML SDK v2. The pipeline reads a registered data asset, trains a model, and registers the output. During a pipeline run, you receive this error:\n\n    UserError: The data asset version 'training_data:3' could not be resolved.\n\nYou need to fix the pipeline so it always uses the latest version of the data asset without hardcoding version numbers.\n\nWhich TWO changes should you make?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Replace the versioned reference with ml_client.data.get('training_data', label='latest') to resolve the latest version at submission time",
+        "is_correct": true
+      },
+      {
+        "id": "B",
+        "text": "Set the data asset version to 'latest' as a string literal in the Input() definition",
+        "is_correct": false
+      },
+      {
+        "id": "C",
+        "text": "Use azureml://datastores/... URI with @latest label in the Input path parameter",
+        "is_correct": true
+      },
+      {
+        "id": "D",
+        "text": "Register a new fixed version of the data asset before each pipeline run using ml_client.data.create_or_update()",
+        "is_correct": false
+      }
+    ],
+    "correct_order": null,
+    "feedback": "Both ml_client.data.get() with label='latest' and the @latest URI label are the correct SDK v2 patterns for resolving the latest data asset version dynamically. 'latest' as a string literal is not a valid version value. Registering a new version each run adds unnecessary overhead and doesn't solve the dynamic resolution problem.",
+    "explanation": null
+  },
+  {
+    "question_id": "scen_003",
+    "type": "multiple_choice_single_answer",
+    "tag": "SCENARIO",
+    "question": "Your team is building a computer vision pipeline that fine-tunes a PyTorch model on a GPU cluster. The job runs successfully on a single node but fails with a NCCL error when scaled to 4 nodes:\n\n    NCCL error: unhandled system error / ncclSystemError\n\nThe compute cluster uses Standard_NC6s_v3 VMs. Networking is configured with the default VNet.\n\nWhat is the MOST LIKELY cause and fix?",
+    "options": [
+      {
+        "id": "A",
+        "text": "The model is too large for multi-node training; switch to Standard_ND40rs_v2 VMs with InfiniBand support",
+        "is_correct": false
+      },
+      {
+        "id": "B",
+        "text": "NCCL requires InfiniBand or RDMA-enabled VMs for multi-node GPU communication; Standard_NC6s_v3 does not support InfiniBand. Switch to an ND-series VM that supports InfiniBand and ensure the VNet allows RDMA traffic.",
+        "is_correct": true
+      },
+      {
+        "id": "C",
+        "text": "Increase the process_count_per_node to match the number of GPUs per VM and set node_count=1",
+        "is_correct": false
+      },
+      {
+        "id": "D",
+        "text": "Switch the distribution strategy from PyTorch to MPI to avoid NCCL dependency",
+        "is_correct": false
+      }
+    ],
+    "correct_order": null,
+    "feedback": "NCCL multi-node errors on Azure are almost always caused by using VM SKUs that lack InfiniBand/RDMA support. NC-series VMs use standard Ethernet for inter-node communication, which causes NCCL system errors at scale. ND-series (e.g. ND40rs_v2) supports InfiniBand. Switching distribution type doesn't fix the underlying network hardware limitation.",
+    "explanation": null
+  },
+  {
+    "question_id": "scen_004",
+    "type": "multiple_choice_single_answer",
+    "tag": "SCENARIO",
+    "question": "You are operationalizing an ML model using Azure ML pipelines. The pipeline has three sequential components: data_prep, train, and evaluate. The evaluate component outputs a metric called 'val_accuracy'. You want the pipeline to automatically register the model ONLY if val_accuracy >= 0.85, without manual intervention.\n\nHow should you implement this?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Add an if/else block in the pipeline YAML to conditionally run the register_model component based on the evaluate output",
+        "is_correct": false
+      },
+      {
+        "id": "B",
+        "text": "Use a Control Flow component (condition node) in the pipeline that reads the val_accuracy output and only executes the register_model step if the threshold is met",
+        "is_correct": false
+      },
+      {
+        "id": "C",
+        "text": "Within the evaluate component script, check val_accuracy and call ml_client.models.create_or_update() conditionally inside the component code before the component exits",
+        "is_correct": true
+      },
+      {
+        "id": "D",
+        "text": "Configure a Pipeline Schedule with a metric-based trigger on val_accuracy >= 0.85 in the Azure ML studio UI",
+        "is_correct": false
+      }
+    ],
+    "correct_order": null,
+    "feedback": "Azure ML SDK v2 pipelines do not natively support conditional branching between components at the pipeline graph level (no if/else in YAML or condition nodes as of current SDK v2). The correct pattern is to embed the conditional registration logic inside the evaluate component itself using ml_client within the component script. Pipeline schedules are time-based, not metric-based.",
+    "explanation": null
+  },
+  {
+    "question_id": "scen_005",
+    "type": "multiple_choice_multiple_answer",
+    "tag": "SCENARIO",
+    "question": "You built a churn prediction model and deployed it to a managed online endpoint. Three weeks after deployment, you notice prediction quality has degraded. You want to set up monitoring so you are automatically alerted when data drift exceeds a threshold in the future.\n\nWhich TWO actions are required to enable this?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Enable data collection on the online deployment by setting data_collector in the deployment definition to capture inputs and outputs",
+        "is_correct": true
+      },
+      {
+        "id": "B",
+        "text": "Create a model monitor using ml_client.model_monitors.create_or_update() with a reference dataset and drift threshold alerts configured",
+        "is_correct": true
+      },
+      {
+        "id": "C",
+        "text": "Configure Application Insights in the Azure ML workspace to track feature distributions automatically",
+        "is_correct": false
+      },
+      {
+        "id": "D",
+        "text": "Register a new version of the model with monitoring=True to activate drift detection",
+        "is_correct": false
+      }
+    ],
+    "correct_order": null,
+    "feedback": "Data drift monitoring in Azure ML requires two things: (1) data collection enabled on the deployment so production inputs/outputs are captured, and (2) a Model Monitor configured with a reference dataset and alert thresholds. Application Insights tracks telemetry/latency, not feature drift. There is no monitoring=True flag on model registration.",
+    "explanation": null
+  },
+  {
+    "question_id": "scen_006",
+    "type": "multiple_choice_single_answer",
+    "tag": "SCENARIO",
+    "question": "You are running an AutoML classification job on a tabular dataset with 2 million rows. The job is taking over 6 hours and you need it to complete within 2 hours. Your dataset has 40 features, some of which are high-cardinality categoricals.\n\nWhich combination of AutoML settings will MOST effectively reduce run time while preserving model quality?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Set enable_early_termination=True, experiment_timeout_hours=2, and max_concurrent_iterations=8 on a cluster with 8 nodes",
+        "is_correct": false
+      },
+      {
+        "id": "B",
+        "text": "Set experiment_timeout_hours=2, max_concurrent_iterations=8, featurization='auto', and enable_stack_ensemble=False on a cluster with 8 nodes",
+        "is_correct": true
+      },
+      {
+        "id": "C",
+        "text": "Set experiment_timeout_hours=2, blocked_models=['XGBoostClassifier','LightGBM'], and max_iterations=5",
+        "is_correct": false
+      },
+      {
+        "id": "D",
+        "text": "Enable enable_onnx_compatible_models=True and set featurization='off' to reduce preprocessing overhead",
+        "is_correct": false
+      }
+    ],
+    "correct_order": null,
+    "feedback": "The most impactful levers are: (1) parallelism via max_concurrent_iterations matching node count, (2) disabling stack ensemble which adds significant time at the end with marginal gain, and (3) letting featurization='auto' handle categoricals correctly. Blocking strong models like XGBoost/LightGBM hurts quality. ONNX compatibility and featurization='off' don't address speed meaningfully and the latter degrades quality on high-cardinality features.",
+    "explanation": null
+  },
+  {
+    "question_id": "scen_007",
+    "type": "multiple_choice_single_answer",
+    "tag": "SCENARIO",
+    "question": "You need to train a model that requires a custom Docker image with a proprietary C++ library that cannot be installed via pip. The training job must run on Azure ML compute clusters and the image must be rebuilt only when the Dockerfile changes, not on every job submission.\n\nWhat is the correct approach?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Use a custom Environment with build.dockerfile_path pointing to your Dockerfile; Azure ML will build and cache the image in the workspace's Azure Container Registry on first use and reuse it on subsequent runs",
+        "is_correct": true
+      },
+      {
+        "id": "B",
+        "text": "Package the C++ library as a pip wheel and install it via conda_file in the Environment definition",
+        "is_correct": false
+      },
+      {
+        "id": "C",
+        "text": "Upload the Dockerfile to a datastore and reference it as a data input in the training job YAML",
+        "is_correct": false
+      },
+      {
+        "id": "D",
+        "text": "Use a base curated environment and add a setup_script parameter to install the library at job start time on every run",
+        "is_correct": false
+      }
+    ],
+    "correct_order": null,
+    "feedback": "Azure ML Environments built from a Dockerfile are built once and cached in ACR. On subsequent job submissions with the same Environment version, the cached image is reused â€” no rebuild occurs unless you create a new Environment version. Pip wheels require the library to be pip-installable. Datastores are for data, not build contexts. setup_script runs on every job start, not just when the image changes.",
+    "explanation": null
+  },
+  {
+    "question_id": "scen_008",
+    "type": "multiple_choice_multiple_answer",
+    "tag": "SCENARIO",
+    "question": "You have an ML pipeline that retrains a model weekly. After last week's run, a downstream team reports that the registered model is producing different predictions than expected. You need to investigate what changed.\n\nWhich TWO Azure ML features should you use to diagnose the issue?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Open the pipeline run in Azure ML Studio and inspect the lineage view to trace which dataset version and code snapshot were used in the run that produced the registered model",
+        "is_correct": true
+      },
+      {
+        "id": "B",
+        "text": "Use mlflow.get_run() to retrieve logged metrics and parameters from the run associated with the registered model version",
+        "is_correct": true
+      },
+      {
+        "id": "C",
+        "text": "Re-run the pipeline with the same compute cluster to reproduce the issue deterministically",
+        "is_correct": false
+      },
+      {
+        "id": "D",
+        "text": "Compare the model's conda environment YAML files between the current and previous registered versions in the Models registry",
+        "is_correct": false
+      }
+    ],
+    "correct_order": null,
+    "feedback": "The lineage view in Azure ML Studio shows exactly which data asset version, code snapshot, and environment were used â€” this is the first thing to check when a model changes unexpectedly. mlflow.get_run() lets you pull the exact hyperparameters and metrics logged. Re-running doesn't diagnose root cause. Comparing conda YAMLs only catches dependency changes, not data or hyperparameter drift.",
+    "explanation": null
+  },
+  {
+    "question_id": "scen_009",
+    "type": "multiple_choice_single_answer",
+    "tag": "SCENARIO",
+    "question": "You are designing a responsible AI evaluation for a binary classification model used in loan approvals. The model shows 91% overall accuracy, but your Responsible AI dashboard reveals that the false negative rate is 34% for applicants aged 18-25 compared to 8% for applicants aged 40-60.\n\nWhat does this indicate, and what is the appropriate next step?",
+    "options": [
+      {
+        "id": "A",
+        "text": "The model has high overall accuracy so the disparity is within acceptable range; proceed to deployment",
+        "is_correct": false
+      },
+      {
+        "id": "B",
+        "text": "The model exhibits disparate impact on younger applicants; use the Error Analysis component in the Responsible AI dashboard to identify which features drive the disparity, then apply fairness-aware reweighting or threshold adjustment per cohort",
+        "is_correct": true
+      },
+      {
+        "id": "C",
+        "text": "Retrain the model with age removed as a feature to eliminate the bias",
+        "is_correct": false
+      },
+      {
+        "id": "D",
+        "text": "Switch to a more complex model (e.g. deep neural network) to improve overall accuracy and reduce the per-cohort disparity",
+        "is_correct": false
+      }
+    ],
+    "correct_order": null,
+    "feedback": "A 34% vs 8% false negative rate across age groups is a significant fairness violation (disparate impact) regardless of overall accuracy. The RAI dashboard's Error Analysis component identifies root-cause features driving cohort disparities. Removing age doesn't fix proxy features. More complex models often amplify bias. Threshold adjustment per cohort is a valid fairness intervention supported by Azure ML's RAI toolbox.",
+    "explanation": null
+  },
+  {
+    "question_id": "scen_010",
+    "type": "multiple_choice_single_answer",
+    "tag": "SCENARIO",
+    "question": "You need to run hyperparameter tuning for a deep learning model. The search space has 3 continuous parameters and 1 discrete parameter with 5 values. You want to find a good configuration within 20 total runs and terminate poorly-performing runs early.\n\nWhich sweep job configuration is MOST appropriate?",
+    "options": [
+      {
+        "id": "A",
+        "text": "sampling_algorithm: grid, early_termination: BanditPolicy(slack_factor=0.1, evaluation_interval=5)",
+        "is_correct": false
+      },
+      {
+        "id": "B",
+        "text": "sampling_algorithm: random, early_termination: MedianStoppingPolicy(evaluation_interval=5, delay_evaluation=10)",
+        "is_correct": false
+      },
+      {
+        "id": "C",
+        "text": "sampling_algorithm: bayesian, max_total_trials: 20, early_termination: BanditPolicy(slack_factor=0.15, evaluation_interval=5)",
+        "is_correct": true
+      },
+      {
+        "id": "D",
+        "text": "sampling_algorithm: bayesian, max_total_trials: 20, early_termination: TruncationSelectionPolicy(truncation_percentage=20)",
+        "is_correct": false
+      }
+    ],
+    "correct_order": null,
+    "feedback": "Bayesian sampling is optimal for mixed continuous/discrete spaces with a limited budget (20 runs) because it uses prior results to guide exploration intelligently. BanditPolicy terminates runs whose primary metric falls outside a slack margin of the best run, which works well with Bayesian sampling's sequential nature. Grid search is only practical for purely discrete spaces. MedianStoppingPolicy requires more runs to be statistically meaningful. TruncationSelectionPolicy is less compatible with Bayesian sampling's sequential dependency.",
+    "explanation": null
   }
 ]
