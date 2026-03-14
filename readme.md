@@ -11,6 +11,7 @@ A static web version of this app is available via GitHub Pages — no installati
 - Added a static `index.html` web app for GitHub Pages (mobile-friendly, no server needed)
 - Expanded the question bank with additional practice questions covering SDK v2, MLflow, pipelines, compute, AutoML, deployment, Responsible AI, and more
 - All 5 question types supported: single answer, multi-select, ordering, drag-and-drop select, and true/false
+    - With new scenario based questions added as well.
 
 ## Streamlit server still supported
 
